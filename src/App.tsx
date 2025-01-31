@@ -8,10 +8,26 @@ import Listing from './components/Listing';
 function App() {
 
   const [csvData, setCsvData] = useState<any | null>(null);
+  const [apiResponse, setApiResponse] = useState(null);
   // Callback function to update the state with the data received from CSVUpload
   const handleCsvData = (data : any) => {
+    setApiResponse(data);
     // data handling
-    setCsvData(data);
+    const totalSpend = data.detected_patterns.reduce((total : number, pattern : any) => {
+      return total + parseFloat(pattern.amount);
+    }, 0);
+
+    const totalTransactions = data.detected_patterns.length;
+    const totalMerchants = data.normalized_transactions.length;
+
+    const avgTransaction = parseFloat((totalSpend / totalTransactions).toFixed(2));
+
+    setCsvData({
+      totalSpend,
+      transactions : totalTransactions,
+      avgTransaction,
+      merchants: totalMerchants
+    });
   };
 
   const infoBoxes = [
@@ -28,7 +44,7 @@ function App() {
     {
       icon: <FiBarChart />,
       title: 'Avg. Transaction',
-      value: csvData ? csvData.avgTransaction : 'N/A',
+      value: ` $ ${csvData ? csvData.avgTransaction : 0}`,
     },
     {
       icon: <FiCreditCard />,
@@ -44,7 +60,7 @@ function App() {
         <CSVUpload onDataUpload={handleCsvData}/>
       </div>
       <InfoBoxRow infoBoxes={infoBoxes} />
-      <Listing inputCsvData={csvData}/>
+      <Listing inputCsvData={apiResponse}/>
     </>
   )
 }
